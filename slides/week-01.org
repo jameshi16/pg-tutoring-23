@@ -1,0 +1,62 @@
+* Tutor Session Week 1
+
+* Before we start
+- Attendance Taking
+- Communication Platform
+- Tie down a good day to hold sessions (2hrs)
+
+* Who am I?
+
+I'm James.
+
+Blog: https://codingindex.xyz
+GitHub: https://github.com/jameshi16
+
+Fun fact about me: I have no social media
+
+* Introduce yourselves
+
+- Name
+- Programming Experience
+- Proudest Technical Achievement
+
+* Your first term
+
+- Introduction to Programming (C, later on Haskell)
+- Engineering Challenges (C++)
+- Design & Professional Skills (Python)
+
+* Hello world examples
+
+C:
+#+BEGIN_SRC c
+  #include "stdio.h"
+
+  int main() {
+    printf("hello, world\n");
+    return;
+  }
+#+END_SRC
+
+Haskell:
+#+BEGIN_SRC haskell
+  putStrLn "hello, world"
+#+END_SRC
+
+C++:
+#+BEGIN_SRC c++
+  #include <stdio>
+  using namespace std;
+
+  int main() {
+    cout << "hello, world" << endl;
+    return 0;
+  }
+#+END_SRC
+
+Python:
+#+BEGIN_SRC python
+  print("hello, world")
+#+END_SRC
+
+* Questions about your first week?
