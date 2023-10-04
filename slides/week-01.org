@@ -3,7 +3,15 @@
 * Before we start
 - Attendance Taking
 - Communication Platform
-- Tie down a good day to hold sessions (2hrs)
+- Tie down a good day to hold sessions (2hrs / 2 1hr sessions)
+
+* Quick Expectations
+- ❌ I can't do your coursework for you
+- ✅ I can help you /learn/ programming
+- ✅ I can provide general curriculum assistance
+- ✅ I can help you convert to Emacs (better than Vim by the way, ong
+  no cap)
+- ✅ I can help you convert to Linux, or at least WSL
 
 * Who am I?
 
