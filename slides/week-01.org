@@ -35,6 +35,11 @@ Fun fact about me: I have no social media
 - Engineering Challenges (C++)
 - Design & Professional Skills (Python)
 
+* Your second term
+
+- Data Structures & Algorithms (Python)
+- Object Oriented Programming (Java)
+
 * Hello world examples
 
 C:
@@ -43,7 +48,7 @@ C:
 
   int main() {
     printf("hello, world\n");
-    return;
+    return 0;
   }
 #+END_SRC
 
@@ -66,6 +71,33 @@ C++:
 Python:
 #+BEGIN_SRC python
   print("hello, world")
+#+END_SRC
+
+* Fibonacci example
+
+C:
+#+BEGIN_SRC c
+  #include "stdio.h"
+
+  int fib(int x) {
+    if (x == 0) return 0;
+    if (x == 1 || x == 2) return 1;
+    return fib(x - 1) + fib(x - 2);
+  }
+
+  int main() {
+    printf("%d\n", fib(2));
+    return 0;
+  }
+#+END_SRC
+
+Haskell:
+#+BEGIN_SRC haskell
+  fib :: (Integral a) => a -> a
+  fib 0 = 0
+  fib 1 = 1
+  fib 2 = 1
+  fib x = (fib (x - 1)) + (fib (x - 2))
 #+END_SRC
 
 * Questions about your first week?
