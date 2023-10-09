@@ -1,10 +1,3 @@
-* TODO:
-
-- user_setup.h needs to be done
-- explain more about serial baud
-- hex colors
-- https://github.com/jameshi16/WiFiManager, hint hint wink wink
-
 * Tutor Session Week 2
 
 * Before we start
@@ -103,3 +96,13 @@ You compile the above by running:
 
 This allows you to hide implementation, which can be useful when
 collaborating with others / writing libraries.
+
+* ESP32 Part
+
+Need to perform ~user_setup.h~ & Hex colors explanation
+
+- https://github.com/jameshi16/WiFiManager, hint hint wink wink
+
+Refer to ~projects/simple-display~.
+
+* Building a simple CLI calculator
