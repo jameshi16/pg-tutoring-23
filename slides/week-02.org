@@ -1,0 +1,105 @@
+* TODO:
+
+- user_setup.h needs to be done
+- explain more about serial baud
+- hex colors
+- https://github.com/jameshi16/WiFiManager, hint hint wink wink
+
+* Tutor Session Week 2
+
+* Before we start
+- Attendance Taking
+- Reiterate sessions timing
+- Reiterate sessions structure
+
+* This Week
+- Quick run through on C (Enough for the below stuff)
+- ESP32: How to connect to WiFi
+- TFT display: How to draw stuff on the display
+- Building a simple CLI calculator on C (Interactive)
+
+* C Function Structure
+
+All C functions look something like this:
+
+#+BEGIN_SRC
+preprocessor_directives...
+
+type function_name(type argument_1, type argument_2, ...) {
+   statement_1;
+   statement_2;
+   ...
+
+   return statement;
+}
+#+END_SRC
+
+Some pre-processor directives you may see:
+- ~#include <some file.h>~
+- ~#include "some file w.r.t this file~
+- ~#pragma once~
+
+#+BEGIN_SRC c
+  #include <stdlib.h>
+  #include <time.h>
+
+  int random_number(int max_bound) {
+    srand(time(NULL));
+    return rand() % max_bound;
+  }
+#+END_SRC
+
+* C Header Files
+
+You can split source code into multiple header files. For example:
+
+#+BEGIN_SRC c
+  // this would be a.h
+  int fair_dice_roll() {
+    return 4; // guaranteed to be random clueless
+  }
+#+END_SRC
+
+#+BEGIN_SRC c
+  // this would be main.c
+  #include "a.h"
+
+  int main() {
+    printf("%d\n", fair_dice_roll());
+    return 0;
+  }
+#+END_SRC
+
+* C Source + Header Files
+
+There is a difference between /declarations/ and
+/definitions/. Still looking at the above example:
+
+#+BEGIN_SRC c
+  // a.h
+  int fair_dice_roll(); // this suffices as a declaration
+#+END_SRC
+
+#+BEGIN_SRC c
+  // a.c
+  int fair_dice_roll() {
+    return 4; // still random, i swear
+  }
+#+END_SRC
+
+#+BEGIN_SRC c
+  // main.c
+  int main() {
+    printf("%d\n", fair_dice_roll());
+    return 0;
+  }
+#+END_SRC
+
+You compile the above by running:
+
+#+BEGIN_SRC shell
+  cc main main.c a.c
+#+END_SRC
+
+This allows you to hide implementation, which can be useful when
+collaborating with others / writing libraries.
