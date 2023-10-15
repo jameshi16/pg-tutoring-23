@@ -1,0 +1,509 @@
+* Tutor Session Week 3
+
+* Before we start
+- Attendance Taking
+
+* Pointers? I hardly know her
+
+#+CAPTION: Meme about pointers
+#+NAME: fig:meme
+[[file:images/pointers_01.png]]
+
+* A Value
+
+A value is something that exists within a memory block. For example,
+if I something like this:
+
+#+BEGIN_SRC c
+  int some_variable = 1337;
+#+END_SRC
+
+Then, abstracting all the byte parsing stuff, 1337 would look like
+this would exist within memory:
+
+#+CAPTION: Variable points to some part of memory with 1337
+#+NAME: fig:impt_1
+[[file:images/pointers_02.png]]
+
+Now, presume we pass this variable to another function, like so:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  void some_function(int a) {
+    a += 1;
+    printf("%d\n", a);
+  }
+
+  int main() {
+    int some_variable = 1337;
+    some_function(some_variable);
+    printf("%d\n", some_variable);
+    return 0;
+  }
+#+END_SRC
+
+What do you suppose will be printed?
+
+* A Value - Continued
+
+Here's what's going on:
+
+[[file:./images/pointers_03.png]]
+
+What if we also want /some_variable/ to change?
+
+* A Pointer
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  void some_function(int* a) {
+    (*a) += 1;
+    printf("%d\n", *a);
+  }
+
+  int main() {
+    int some_variable = 1337;
+    some_function(&some_variable);
+    printf("%d\n", some_variable);
+    return 0;
+  }
+#+END_SRC
+
+[[file:images/pointers_04.png]]
+
+* Uh Oh...
+
+You decided to give your code to Bob. He does this with =some_function=:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  void some_function(int* a) {
+    (*a) += 1;
+    printf("%d\n", *a);
+  }
+
+  int main() {
+    some_function(0);
+    return 1;
+  }
+#+END_SRC
+
+What happens when we run this?
+
+* Arrays
+
+In a nutshell, arrays are homogeneous contiguous blocks of memory. A
+name to a array, for example =int arr[5]=, point to an array in a
+manner like this:
+
+[[file:images/pointers_06.png]]
+
+Presume you wrote a wonderful program that does some cool things:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int main() {
+    int input = 0;
+    int some_cool_array[4];
+    const unsigned long array_size = sizeof(some_cool_array) / sizeof(int);
+    for (unsigned long i = 0; i < array_size; i++) {
+      printf("Put number (%ld): ", i + 1);
+      scanf("%d", &input);
+      some_cool_array[i] = input;
+    }
+
+    printf("You put: ");
+    for (unsigned long i = 0; i < array_size; i++) {
+      printf("%d ", some_cool_array[i]);
+    }
+    printf("\n");
+    return 0;
+  }
+#+END_SRC
+
+Okay, but you don't want your user to only input 4 variables; you want
+them to be able to input unlimited variables. So you do this:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int main() {
+    unsigned long array_size = 0;
+    printf("Size: ");
+    scanf("%ld", &array_size);
+
+    int input = 0;
+    int some_cool_array[array_size];
+    for (unsigned long i = 0; i < array_size; i++) {
+      printf("Put number (%ld): ", i + 1);
+      scanf("%d", &input);
+      some_cool_array[i] = input;
+    }
+
+    printf("You put: ");
+    for (unsigned long i = 0; i < array_size; i++) {
+      printf("%d ", some_cool_array[i]);
+    }
+    printf("\n");
+    return 0;
+  }
+#+END_SRC
+
+The function looks a little long, so you want to refactor it into
+multiple functions. You decided you want to split the code into
+minimally 3 functions:
+
+1. The main function to drive the code;
+2. One function to get the array input from the user;
+3. One function to print the array.
+
+* Arrays: They're actually just pointers in disguise
+
+Arrays using the special =[]= are actually just syntactic sugar
+(i.e. short form) of pointers. Observe:
+
+#+BEGIN_SRC c
+  int arr[5] = {1, 2, 3, 4, 5};
+  for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+    printf("%d\n", arr[i]);
+  }
+  return 0;
+#+END_SRC
+
+#+BEGIN_SRC c
+  int arr[5] = {1, 2, 3, 4, 5};
+  int* accessor = arr;
+  for (int i = 0; i < sizeof(arr) / sizeof(int); i++) {
+    printf("%d\n", *(accessor + i));
+  }
+  return 0;
+#+END_SRC
+
+* Arrays: Refactoring attempt one
+
+Okay then, so surely we can write the array user input function like
+this:
+
+#+BEGIN_SRC c
+  int* get_user_input(int size) {
+    int inputs[size];
+    int user_input;
+    for (int i = 0; i < size; i++) {
+      printf("Input: ");
+      scanf("%d\n", &user_input);
+      inputs[i] = user_input;
+    }
+    return inputs;
+  }
+#+END_SRC
+
+Will this work?
+
+* Arrays: Why refactoring attempt one doesn't work
+
+When creating an array using =int inputs[size]=, we're creating an
+array on the /stack/.
+
+Specially, it goes onto the function call stack:
+#+CAPTION: Stack Frame of =get_user_input= and =main=
+#+NAME: fig:stack_frame
+# By R. S. Shaw - Own work, Public Domain, https://commons.wikimedia.org/w/index.php?curid=1956587
+[[file:images/pointers_05.png]]
+
+Based on the diagram, =inputs[size]= is created within the stack frame
+of =get_user_input()=.
+
+When the function returns, the stack frame at the top of the stack
+gets =popped=; i.e., the memory within it gets freed.
+
+In the above code, we're attempting to return an address that is
+within the stack frame =backwards=; but since the memory that the
+array is in will be destroyed, the original function will get back a
+memory address that may / may not have data! (Unexpected behavior)
+
+How to solve?
+
+* Arrays: Malloc
+
+In C (and most other programming languages), there are two places
+where memory can be allocated / de-allocated: the stack, and the heap.
+
+Unlike the stack, which is controlled based on function calls and
+scopes and stuff, the heap is entirely controlled by the programmer.
+
+The heap memory space is shared by the whole program and is not bound
+to any scope. To create something within the heap memory space, we use
+the =malloc= or =calloc= functions.
+
+- =malloc=: Takes in a single argument, which is the size in bytes.
+- =calloc=: Takes in two arguments; in most implementations, it takes
+  in the number of elements first, then the size of the type.
+
+Both allocation methods will allocate contiguous blocks of memory.
+
+(If you ever need to reallocate memory, either to resize or otherwise,
+take a look at =realloc=).
+
+This is **a lot of power**. Let's see it in action:
+
+#+BEGIN_SRC c
+int* get_user_input(int size) {
+    int* inputs = malloc(size);
+    int user_input;
+    for (int i = 0; i < size; i++) {
+        scanf("%d", &user_input);
+        inputs[i] = user_input;
+    }
+    return inputs;
+}
+#+END_SRC
+
+The compiler doesn't seem to complain about it anymore; but yet,
+there's still something wrong with it. What's the problem?
+
+* Arrays: Valgrind
+
+Let's hook it up to a =main()= function and run through =valgrind=, a
+program designed to detect memory leaks of a debuggable application.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <memory.h>
+
+  int* get_user_input(int size) {
+      int* inputs = malloc(size);
+      int user_input;
+      for (int i = 0; i < size; i++) {
+        printf("Input: ");
+        scanf("%d", &user_input);
+        inputs[i] = user_input;
+      }
+      return inputs;
+  }
+
+  int main() {
+    int* a_ptr = get_user_input(1);
+    return 0;
+  }
+#+END_SRC
+
+We compile it with the debugger flags, which means =gcc -g source.c=.
+
+Then, instead of executing the program directly, we run it via
+=valgrind=, with this set of magic flags:
+
+=valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
+./a.out=
+
+#+BEGIN_QUOTE
+Side note, if you don't compile with the =-g= flag, Valgrind can still
+detect memory leaks, but it won't tell you which =malloc= line creates
+the memory leak.
+#+END_QUOTE
+
+We should see that the leak summary imply we have a memory leak
+somewhere. Oh no!
+
+How should we resolve this?
+
+* Arrays: Resolving memory leaks
+
+Turns out, we just have free the allocated memory blocks every time we
+decide to be done with it.
+
+If the function is expected to return dynamically allocated memory
+from the heap, then it is the caller's responsibility to free it. This
+is something that should be well-documented within your code.
+
+Adding a simple =free()= function, making our source file look like
+this:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <memory.h>
+
+  int* get_user_input(int size) {
+    int* inputs = malloc(size * sizeof(int));
+    int user_input;
+    for (int i = 0; i < size; i++) {
+      printf("Input: ");
+      scanf("%d", &user_input);
+      inputs[i] = user_input;
+    }
+    return inputs;
+  }
+
+  int main() {
+    int* a_ptr = get_user_input(1);
+    free(a_ptr);
+    return 0;
+  }
+#+END_SRC
+
+Will make Valgrind happy.
+
+Now you can continue refactoring your code! (Exercise left to reader)
+
+* Function Pointers
+
+In C, most names can become a pointer. This also includes functions!
+
+#+BEGIN_SRC c
+  typedef int (*fn_ptr) (int);
+#+END_SRC
+
+This is a function pointer called =fn_ptr=, that takes an integer, and
+returns an integer. The below functions can all be pointed to by the
+above function pointer:
+
+#+BEGIN_SRC c
+  int negate(int a) {
+    return -a;
+  }
+
+  int add_to_5(int a) {
+    return a + 5;
+  }
+
+  int double_num(int a) {
+    return a * a;
+  }
+#+END_SRC
+
+Let's make a function that takes in an array of function pointers, and
+runs all of the functions on the number 0:
+
+#+BEGIN_SRC c
+  int processor(fn_ptr operator_fn[], size_t size) {
+    int a = 0;
+    for (size_t i = 0; i < size; i++) {
+      a = operator_fn[i](a);
+    }
+    return a;
+  }
+#+END_SRC
+
+Now we write the =main()= driver code:
+#+BEGIN_SRC c
+  int main() {
+    fn_ptr operators[] = {add_to_5, double_num, negate, add_to_5, negate};
+    int result = processor(operators, sizeof(operators) / sizeof(fn_ptr));
+    printf("%d\n", result);
+    return 0;
+  }
+#+END_SRC
+
+* Structures
+
+Structures can contain fields. The fields can be of any type, which
+also includes function pointers.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <memory.h>
+
+  typedef int (*fn_ptr) (int);
+
+  struct a_struct {
+    int a;
+    fn_ptr ptr;
+  };
+
+
+  int negate(int a) {
+    return -a;
+  }
+
+  int double_num(int a) {
+    return a * a;
+  }
+
+  void fn_that_accepts_struct(struct a_struct instance) {
+    instance.a = 2;
+  }
+
+  int main() {
+    struct a_struct instance = {0, negate};
+    instance.a = 1;
+    instance.ptr = double_num;
+
+    return 0;
+  }
+#+END_SRC
+
+If you don't like writing =struct a_struct= every time you want to
+refer to the structure, you can use a =typedef=:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <memory.h>
+
+  typedef int (*fn_ptr) (int);
+
+  typedef struct {
+      int a;
+      fn_ptr ptr;
+  } a_struct;
+
+
+  int negate(int a) {
+      return -a;
+  }
+
+  int double_num(int a) {
+      return a * a;
+  }
+
+  void fn_that_accepts_struct(a_struct instance) {
+      instance.a = 2;
+  }
+
+  int main() {
+      a_struct instance = {0, negate};
+      instance.a = 1;
+      instance.ptr = double_num;
+
+      return 0;
+  }
+#+END_SRC
+
+The above examples use the stack to allocate the structure. Try
+performing a dynamic allocation!
+
+* By the way, strings are all =char[]=
+
+#+BEGIN_SRC c
+  int main() {
+    char string[] = "actually, I'm a string";
+    printf("%s\n", string);
+    return 0;
+  }
+#+END_SRC
+
+This also means you can use it as a pointer.
+
+* Actually, all pointers are the same.
+
+Using C-style casting, try decoding a message from this number:
+"8319381555649605475".
+
+* Fun facts / Things I didn't get to cover
+
+- /Technically/, under your operating systems, you only work with
+  virtual memory. This makes programming easier, because your program
+  thinks that it has one big block of contiguous memory to work with.
+- However, on the ESP32, you have /direct/ access to memory.
+- Memory maps are a thing; if you know what you are doing, you can
+  control your graphics card via modifying the right parts of
+  memory. Your operating system typically forbids that unless you run
+  on Ring 0.
