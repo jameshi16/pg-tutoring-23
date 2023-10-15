@@ -99,6 +99,9 @@ In a nutshell, arrays are homogeneous contiguous blocks of memory. A
 name to a array, for example =int arr[5]=, point to an array in a
 manner like this:
 
+#+CAPTION: Array Initialization
+#+NAME: fig:array_init
+# Source: Geeks4Geeks
 [[file:images/pointers_06.png]]
 
 Presume you wrote a wonderful program that does some cool things:
