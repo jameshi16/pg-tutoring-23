@@ -12,7 +12,7 @@
 * A Value
 
 A value is something that exists within a memory block. For example,
-if I something like this:
+if I do something like this:
 
 #+BEGIN_SRC c
   int some_variable = 1337;
@@ -96,8 +96,8 @@ What happens when we run this?
 * Arrays
 
 In a nutshell, arrays are homogeneous contiguous blocks of memory. A
-name to a array, for example =int arr[5]=, point to an array in a
-manner like this:
+name to an array, for example =int arr[5]=, actually points to the
+first element in a manner like this:
 
 #+CAPTION: Array Initialization
 #+NAME: fig:array_init
@@ -129,8 +129,8 @@ Presume you wrote a wonderful program that does some cool things:
   }
 #+END_SRC
 
-Okay, but you don't want your user to only input 4 variables; you want
-them to be able to input unlimited variables. So you do this:
+You don't want your user to only input 4 variables; you want them to
+be able to input unlimited variables. So you do this:
 
 #+BEGIN_SRC c
   #include <stdio.h>
@@ -190,8 +190,7 @@ Arrays using the special =[]= are actually just syntactic sugar
 
 * Arrays: Refactoring attempt one
 
-Okay then, so surely we can write the array user input function like
-this:
+Surely we can write the array user input function like this:
 
 #+BEGIN_SRC c
   int* get_user_input(int size) {
@@ -230,7 +229,7 @@ within the stack frame =backwards=; but since the memory that the
 array is in will be destroyed, the original function will get back a
 memory address that may / may not have data! (Unexpected behavior)
 
-How to solve?
+How do we fix this issue?
 
 * Arrays: Malloc
 
@@ -318,8 +317,8 @@ How should we resolve this?
 
 * Arrays: Resolving memory leaks
 
-Turns out, we just have free the allocated memory blocks every time we
-decide to be done with it.
+Turns out, we just have to free the allocated memory blocks every time
+we decide we are done with it.
 
 If the function is expected to return dynamically allocated memory
 from the heap, then it is the caller's responsibility to free it. This
@@ -351,7 +350,7 @@ this:
   }
 #+END_SRC
 
-Will make Valgrind happy.
+This should make Valgrind happy.
 
 Now you can continue refactoring your code! (Exercise left to reader)
 
