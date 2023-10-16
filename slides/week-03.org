@@ -191,7 +191,6 @@ Arrays using the special =[]= are actually just syntactic sugar
 * Arrays: Refactoring attempt one
 
 Surely we can write the array user input function like this:
-
 #+BEGIN_SRC c
   int* get_user_input(int size) {
     int inputs[size];
@@ -255,15 +254,15 @@ take a look at =realloc=).
 This is **a lot of power**. Let's see it in action:
 
 #+BEGIN_SRC c
-int* get_user_input(int size) {
-    int* inputs = malloc(size);
+  int* get_user_input(int size) {
+    int* inputs = malloc(size * sizeof(int));
     int user_input;
     for (int i = 0; i < size; i++) {
-        scanf("%d", &user_input);
-        inputs[i] = user_input;
+      scanf("%d", &user_input);
+      inputs[i] = user_input;
     }
     return inputs;
-}
+  }
 #+END_SRC
 
 The compiler doesn't seem to complain about it anymore; but yet,
@@ -280,14 +279,14 @@ program designed to detect memory leaks of a debuggable application.
   #include <memory.h>
 
   int* get_user_input(int size) {
-      int* inputs = malloc(size);
-      int user_input;
-      for (int i = 0; i < size; i++) {
-        printf("Input: ");
-        scanf("%d", &user_input);
-        inputs[i] = user_input;
-      }
-      return inputs;
+    int* inputs = malloc(size);
+    int user_input;
+    for (int i = 0; i < size; i++) {
+      printf("Input: ");
+      scanf("%d", &user_input);
+      inputs[i] = user_input;
+    }
+    return inputs;
   }
 
   int main() {
