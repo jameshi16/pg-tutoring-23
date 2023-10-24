@@ -1,6 +1,8 @@
 from timeit import timeit
+from queue import Queue
 from typing import TypeVar, Callable
 import random
+import math
 
 T = TypeVar('T')
 
@@ -64,6 +66,154 @@ def merge_sort(arr: list[T]) -> list[T]:
     return arr
 
 
+def merge_sort_iterative_queue(arr: list[T]) -> list[T]:
+    q = Queue()
+    for i in range(len(arr)):
+        q.put((i, i + 1))
+
+    ax = arr.copy()
+
+    while q.qsize() > 1:
+        (start_a, end_a) = q.get()
+        if end_a - start_a == 2:
+            if arr[start_a] > arr[end_a - 1]:
+                arr[start_a], arr[end_a - 1] = arr[end_a - 1], arr[start_a]
+
+        if end_a == len(arr):
+            q.put((start_a, end_a))
+            continue
+
+        (start_b, end_b) = q.get()
+        if end_b - start_b == 2:
+            if arr[start_b] > arr[end_b - 1]:
+                arr[start_b], arr[end_b - 1] = arr[end_b - 1], arr[start_b]
+
+        i, j = start_a, start_b
+        k = start_a
+
+        while i < end_a and j < end_b:
+            if arr[i] <= arr[j]:
+                ax[k] = arr[i]
+                i += 1
+            elif arr[i] > arr[j]:
+                ax[k] = arr[j]
+                j += 1
+            k += 1
+
+        while i < end_a:
+            ax[k] = arr[i]
+            i += 1
+            k += 1
+
+        while j < end_b:
+            ax[k] = arr[j]
+            j += 1
+            k += 1
+
+        arr[start_a:end_b] = ax[start_a:end_b]
+        q.put((start_a, end_b))
+
+    return arr
+
+
+def merge_sort_iterative_stack(arr: list[T]) -> list[T]:
+    s = [(0, len(arr) // 2, len(arr))]
+    i = 0
+    while i < len(s):
+        (lo, mid, hi) = s[i]
+        if (lo, mid, hi) == (lo, lo, lo + 1):
+            i += 1
+            continue
+
+        s.append((lo, (lo + mid) // 2, mid))
+        s.append((mid, (mid + hi) // 2, hi))
+        i += 1
+
+    ax = arr.copy()
+    for (lo, mid, hi) in reversed(s):
+        if hi - lo == 1:
+            continue
+        elif hi - lo == 2:
+            if arr[lo] > arr[lo + 1]:
+                arr[lo], arr[lo + 1] = arr[lo + 1], arr[lo]
+            continue
+
+        i, j = lo, mid
+        k = lo
+
+        while i < mid and j < hi:
+            if arr[i] <= arr[j]:
+                ax[k] = arr[i]
+                i += 1
+            elif arr[i] > arr[j]:
+                ax[k] = arr[j]
+                j += 1
+            k += 1
+
+        while i < mid:
+            ax[k] = arr[i]
+            i += 1
+            k += 1
+
+        while j < hi:
+            ax[k] = arr[j]
+            j += 1
+            k += 1
+
+        arr[lo:hi] = ax[lo:hi]
+    return arr
+
+
+def merge_sort_iterative_none(arr: list[T]) -> list[T]:
+    ax = arr.copy()
+    height = int(math.log2(len(arr))) + 1
+
+    def merge(lo, mid, hi):
+        a, b = lo, mid
+        k = lo
+
+        while a < mid and b < hi:
+            if arr[a] <= arr[b]:
+                ax[k] = arr[a]
+                a += 1
+            elif arr[a] > arr[b]:
+                ax[k] = arr[b]
+                b += 1
+            k += 1
+
+        while a < mid:
+            ax[k] = arr[a]
+            a += 1
+            k += 1
+
+        while b < hi:
+            ax[k] = arr[b]
+            b += 1
+            k += 1
+
+        arr[lo:hi] = ax[lo:hi]
+
+    for i in range(1, height):
+        for j in range(0, len(arr), 2**i):
+            if i == 1:
+                if arr[j] > arr[j + 1]:
+                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                continue
+
+            lo, hi = j, min(j + 2**i, len(arr))
+            mid = (lo + hi) // 2
+            merge(lo, mid, hi)
+
+
+    # one more merge to finish it off, setting mid to the last height
+    lo, hi = 0, len(arr)
+    mid = 2**(height - 1)
+    a, b = lo, mid
+    k = lo
+    merge(lo, mid, hi)
+    return arr
+
+
 def quick_partition(arr: list[T]) -> T:
     i = 1
     j = len(arr) - 1
@@ -121,7 +271,7 @@ def fast_test(sorting_fn: Callable[[list[T]], list[T]]) -> bool:
 
 
 if __name__ == '__main__':
-    sort = quick_sort
+    sort = merge_sort_iterative_none
     print(f'{str(sort)}')
     print(f'Fast Test Result: {fast_test(sort)}')
     print(time_sort(10000, sort))
