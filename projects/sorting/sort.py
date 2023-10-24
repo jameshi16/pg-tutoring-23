@@ -166,7 +166,6 @@ def merge_sort_iterative_stack(arr: list[T]) -> list[T]:
 
 def merge_sort_iterative_none(arr: list[T]) -> list[T]:
     ax = arr.copy()
-    height = int(math.log2(len(arr))) + 1
 
     def merge(lo, mid, hi):
         a, b = lo, mid
@@ -193,24 +192,14 @@ def merge_sort_iterative_none(arr: list[T]) -> list[T]:
 
         arr[lo:hi] = ax[lo:hi]
 
-    for i in range(1, height):
-        for j in range(0, len(arr), 2**i):
-            if i == 1:
-                if arr[j] > arr[j + 1]:
-                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
-                continue
-
-            lo, hi = j, min(j + 2**i, len(arr))
-            mid = (lo + hi) // 2
+    i = 1
+    while i < len(arr):
+        for j in range(0, len(arr) - 1, 2*i):
+            lo, hi = j, min(j + 2*i, len(arr))
+            mid = min(lo + i, hi)
             merge(lo, mid, hi)
+        i *= 2
 
-
-    # one more merge to finish it off, setting mid to the last height
-    lo, hi = 0, len(arr)
-    mid = 2**(height - 1)
-    a, b = lo, mid
-    k = lo
-    merge(lo, mid, hi)
     return arr
 
 
@@ -266,7 +255,7 @@ def fast_test(sorting_fn: Callable[[list[T]], list[T]]) -> bool:
     """
     Checks if the sorting function is sane
     """
-    ints = generate_random_integers(10)
+    ints = generate_random_integers(20)
     return list(sorted(ints)) == sorting_fn(ints)
 
 
