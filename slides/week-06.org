@@ -1,0 +1,199 @@
+* Tutor Session Week 6
+
+* Before we start
+- Attendance Taking
+
+* Stack
+
+A stack is a **first in last out** data structure.
+
+This is the simplest data structure to implement in most languages.
+
+#+BEGIN_SRC haskell
+push :: a -> [a] -> [a]
+push x xs = x:xs
+
+peek :: [a] -> a
+peek [] = error "uh oh"
+peek (x:_) = x
+
+pop :: [a] -> [a]
+pop [] = error "uh oh"
+pop (_:xs) = xs
+#+END_SRC
+
+* Queue
+
+A queue is a **first in first out** data structure.
+
+#+BEGIN_SRC haskell
+data Queue a = Q { front :: [a], back :: [a]} deriving (Show)
+
+empty :: Queue a
+empty = Q [] []
+
+queue :: a -> Queue a -> Queue a
+queue x q = Q (front q) (x : back q)
+
+dequeue :: Queue a -> (Queue a, a)
+dequeue (Q f b)
+  | length f == 0 = case length b of 0 -> error "oops"
+                                     _ -> dequeue $ moveBack
+  | otherwise = (Q (tail f) (b), head f)
+  where moveBack = Q (reverse $ b) ([])
+#+END_SRC
+
+* Binary Tree
+
+A binary tree is a data structure where each node can have at most two children.
+
+A tree is an directed (from parent to child) and acyclic (no loops) graph.
+
+#+BEGIN_SRC haskell
+data Tree a = Node (Tree a) a (Tree a) | Leaf deriving (Show)
+
+empty :: Tree a
+empty = Leaf
+
+addNode :: (Ord a) => a -> (Tree a) -> (Tree a)
+addNode a (Leaf) = (Node Leaf a Leaf)
+addNode a (Node lhs b rhs)
+  | a <= b = Node (addNode a lhs) b rhs
+  | a > b = Node lhs b (addNode a rhs)
+addNode _ _ = error "Impossible case"
+
+inorder :: (Tree a) -> [a]
+inorder (Leaf) = []
+inorder (Node lhs b rhs) = inorder lhs ++ b : inorder rhs
+
+exists :: (Ord a) => (Tree a) -> a -> Bool
+exists (Leaf) _ = False
+exists (Node lhs b rhs) a
+  | a == b = True
+  | a < b = exists lhs a
+  | a >= b = exists rhs a
+exists _ _ = error "Impossible case"
+#+END_SRC
+
+(Binary Search Tree implemented as a showcase)
+
+* Heap
+
+A heap is a special binary tree.
+
+A min-heap has the assertion that the parent element will always be
+less than their children.
+
+A max-heap has the assertion that the parent element will be more than
+their children.
+
+Here, we assume we are working with a min-heap.
+
+** Sinking
+
+To sink an element, we:
+
+1. Check if the node is smaller than any of the children. If it is, quit.
+2. If smaller, swap with the **smallest** child.
+3. Continue sinking operation on **smallest** child.
+
+#+BEGIN_SRC haskell
+sink :: (Ord a) => [a] -> Int -> [a]
+sink xs ind
+  | ind >= div (length xs) 2 = xs
+  | xs !! ind > xs !! smallerChild =
+    (flip sink) smallerChild $ swap xs smallerChild ind
+  | otherwise = xs
+  where leftChild = leftChildInd ind
+        rightChild = rightChildInd ind
+        smallerChild
+          | rightChild >= length xs = leftChild
+          | xs !! leftChild > xs !! rightChild = rightChild
+          | otherwise = leftChild
+#+END_SRC
+
+** Swimming
+
+To swim an element, we:
+
+1. Check if the node is larger than its parent. If it is, quit.
+2. If larger, swap with the parent.
+3. Continue swimming operation on parent.
+
+#+BEGIN_SRC haskell
+swim :: (Ord a) => [a] -> Int -> [a]
+swim xs ind
+  | ind <= 0 = xs
+  | ele < parentEle = swap xs parentIdx ind
+  | otherwise = xs
+  where parentIdx = parentInd ind
+        parentEle = xs !! parentIdx
+        ele = xs !! ind
+#+END_SRC
+
+** Heapify
+
+We begin with the first node with children. We sink it.
+
+#+BEGIN_SRC haskell
+heapify :: (Ord a) => [a] -> [a]
+heapify xs = helper (parentInd $ length xs - 1) xs
+  where helper i ys
+          | i < 0 = error (show i)
+          | i <= 0 = sink ys 0
+          | otherwise = helper (i - 1) $ sink ys i
+#+END_SRC
+
+** All together
+
+#+BEGIN_SRC haskell
+parentInd :: Int -> Int
+parentInd x = max 0 (div (x + 1) 2) - 1
+
+leftChildInd :: Int -> Int
+leftChildInd x = (x + 1) * 2 - 1
+
+rightChildInd :: Int -> Int
+rightChildInd x = (x + 1) * 2
+
+-- There is a faster way to swap, I know.
+swap :: [a] -> Int -> Int -> [a]
+swap [] _ _ = error "bruh"
+swap xs a b = [element ind x | (ind, x) <- zip [0..] xs]
+              where element ind val
+                      | ind == a = xs !! b
+                      | ind == b = xs !! a
+                      | otherwise = val
+
+sink :: (Ord a) => [a] -> Int -> [a]
+sink xs ind
+  | ind >= div (length xs) 2 = xs
+  | xs !! ind > xs !! smallerChild =
+    (flip sink) smallerChild $ swap xs smallerChild ind
+  | otherwise = xs
+  where leftChild = leftChildInd ind
+        rightChild = rightChildInd ind
+        smallerChild
+          | rightChild >= length xs = leftChild
+          | xs !! leftChild > xs !! rightChild = rightChild
+          | otherwise = leftChild
+
+swim :: (Ord a) => [a] -> Int -> [a]
+swim xs ind
+  | ind <= 0 = xs
+  | ele < parentEle = swap xs parentIdx ind
+  | otherwise = xs
+  where parentIdx = parentInd ind
+        parentEle = xs !! parentIdx
+        ele = xs !! ind
+
+pop :: (Ord a) => [a] -> ([a], a)
+pop xs = (sink (init $ swap xs 0 $ length xs - 1) 0, head xs)
+
+heapify :: (Ord a) => [a] -> [a]
+heapify xs = helper (parentInd $ length xs - 1) xs
+  where helper i ys
+          | i < 0 = error (show i)
+          | i <= 0 = sink ys 0
+          | otherwise = helper (i - 1) $ sink ys i
+#+END_SRC
