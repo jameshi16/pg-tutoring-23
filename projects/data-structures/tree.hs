@@ -17,6 +17,11 @@ inorder :: (Tree a) -> [a]
 inorder (Leaf) = []
 inorder (Node lhs b rhs) = inorder lhs ++ b : inorder rhs
 
+optimized_inorder :: (Tree a) -> [a] -> [a]
+optimized_inorder (Leaf) xs = xs
+optimized_inorder (Node lhs b rhs) xs = optimized_inorder lhs $
+  (b:optimized_inorder rhs xs)
+
 exists :: (Ord a) => (Tree a) -> a -> Bool
 exists (Leaf) _ = False
 exists (Node lhs b rhs) a

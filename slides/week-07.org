@@ -1,0 +1,186 @@
+* Tutor Session Week 7
+
+* Before we start
+- Attendance Taking
+- Any questions about Haskell
+
+* Recursion
+
+_Recursion_ happens when a bigger problem can be solved by instances
+of smaller problems.
+
+A very common example is to compute the n-th factorial:
+
+#+BEGIN_SRC haskell
+  factorial :: Int -> Int -> Int
+  factorial 1 = 1
+  factorial x = x * factorial x - 1
+#+END_SRC
+
+Recursion is also very useful for tree traversal. For example, here is
+in-order traversal:
+
+#+BEGIN_SRC haskell
+  inorder :: (Tree a) -> [a]
+  inorder (Leaf) = []
+  inorder (Node lhs b rhs) = inorder lhs ++ b : inorder rhs
+#+END_SRC
+
+The above can be optimized even further. Where does the in-efficiency
+lie? How do I make it faster?
+
+* Recursion: Optimized In-Order
+
+#+BEGIN_SRC haskell
+  optimized_inorder :: (Tree a) -> [a] -> [a]
+  optimized_inorder (Leaf) xs = xs
+  optimized_inorder (Node lhs b rhs) xs = optimized_inorder lhs $
+    (b:optimized_inorder rhs xs)
+#+END_SRC
+
+Hint, hint, wink, wink. Optimizing /how/ you work with lists is always
+a challenge in functional programming languages.
+
+* Dynamic Programming
+
+To recognize a problem in Dynamic Programming, you _must_ have the following:
+
+1. Overlapping Sub-problems
+2. Overlapping Sub-structure
+
+Most dynamic programming problems can also be solved with a recursive
+solution, but such a solution will be incredibly slow.
+
+* Dynamic Programming - Overlapping Subproblems
+
+This is slightly different from the definition in recursion, where a
+bigger problem can be broken down into smaller problems.
+
+How is it different?
+
+Strictly speaking, all you need for recursion is the fact that to
+solve the big problem, you can solve smaller problems.
+
+When talking about overlapping sub-problems, you may need to solve the
+same smaller problem over and over again when solving for a big
+problem.
+
+* Dynamic Programming - Fibonacci Numbers
+
+Fibonacci Numbers can be implemented in recursion like so:
+
+#+BEGIN_SRC python
+  def fibonacci(x):
+      if x == 0: return 0
+      if x == 1 or x == 2: return 1
+      return fibonacci(x - 1) + fibonacci(x - 2)
+#+END_SRC
+
+However, you realize that while solving =fibonacci(x - 1)=, you also
+solve some part of =fibonacci(x - 2)=!
+
+(Friendly reminder to myself, start drawing stuff)
+
+* Dynamic Programming - Fibonacci Numbers (cont.)
+
+What if we can somehow store earlier values of =fibonacci(x)= to save
+some computation?
+
+With the _bottom-up_ dynamic programming approach (i.e. we first build
+sub-problems, then solve the main problem):
+
+#+BEGIN_SRC python
+  def fibonacci(x):
+      a, b = 0, 1
+      while x > 0:
+          tmp = b
+          b = a + b
+          a = tmp
+          x -= 1
+      return a
+#+END_SRC
+
+* Dynamic Programming - Proving that our algorithm works
+
+#+BEGIN_QUOTE
+Side note, you can formally proof this as well. When you take the
+logic module, try to prove it:
+
+1. Let =fib(n)= be the standard interpretation of Fibonacci numbers.
+2. We want to prove that the above algorithm outputs =fib(n)=.
+3. Induction over =n=
+   1. Base case: =fib(0)= is =0=, since the while loop does not
+      run. This is correct, since =fib(0)= indeed equal =0=.
+   2. Base case: =fib(1)= will cause the loop to run once, resulting
+      in =a= as =1=, and =b= as =0+1=, which is =1=. Since we return
+      =a=, this is correct, since =fib(1)= indeed equal =1=.
+   3. Induction Hypothesis: =fib(k - 1)= and =fib(k)= gives the
+      correct fib numbers. In the case of =fib(k - 1)=, =a= is the
+      correct fib number, and =b= is the next fib number. In the case
+      of =fib(k)=, we only know that =a= is the correct fib number,
+      while =b= is =fib(k) + fib(k + 1)=
+   4. Step Case: We want to prove that =fib(k + 1)= gives the correct
+      fib number.
+
+      In traditional Fibonacci, =fib(k + 1)= relies on the values
+      =fib(k)= and =fib(k - 1)=. Before the loop iterates, we know
+      that =a= is =fib(k)=, and =b= is =fib(k) + fib(k + 1)=.
+
+      When the loop iterates, =a= is now =fib(k) + fib(k + 1)=.
+
+      Hence, by two-step induction, the algorithm is correct.
+#+END_QUOTE
+
+* Dynamic Programming - Memoization vs Tabulation
+
+Remember the phrase "if we can somehow store earlier values"?
+
+There are two ways to do this: memoization, and tablulation. Both will
+result in a solution implemented in Dynamic Programming.
+
+If you perform memoization, you're doing what is known as /top-down
+approach/. Memoization includes things like caching.
+
+Here is an ooga-booga brain example of Fibonacci with caching:
+
+#+BEGIN_SRC python
+  import functools
+
+  @functools.lru_cache
+  def fibonacci(x):
+    if x == 0: return 0
+    if x == 1 or x == 2: return 1
+    return fibonacci(x - 1) + fibonacci(x - 2)
+#+END_SRC
+
+Believe or not, that is /technically/ considered dynamic programming.
+
+In this case, we're going from **big problem** to **small problem**,
+which is a key characteristic of memoization based dynamic
+programming.
+
+Tabluation stores values of smaller problems, typically in tables,
+then builds it up to the final solution. This is essentially what
+we've done to the Fibonacci numbers in the dynamic programming
+example, just that we found out we didn't need the entire table.
+
+#+BEGIN_SRC python
+  def fibonacci(x):
+      xs = [0] * (x + 1)
+      xs[0] = 0
+      xs[1] = 1
+      for i in range(2, x + 1):
+          xs[i] = xs[i - 2] + xs[i - 1]
+      return xs[x]
+#+END_SRC
+
+* Dynamic Programming - Exercise - Coin Changing Problem
+
+Suppose I have some coin denominators, =[1,5,10]=. Given some =N=, how
+many possible combination of coins can I build to get =N=?
+
+Clarification:
+- =1+5= is the same as =5+1= (we're talking about combination, not permutation)
+- =1+1+1+1+1+1= is NOT the same as =5+1=
+
+Refer to [[file:../projects/coin-change/coin.py][this for the solution]].
