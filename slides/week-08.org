@@ -1,0 +1,603 @@
+* Tutor Session Week 8
+
+* Before we start
+- Attendance Taking
+
+* Important Properties of Haskell
+
+- Functional programming language
+- Symbols and values are /immutable/
+- /Referential transparency/: for any given function, same input =>
+  same output. This means if I already know the output, I can replace
+  the function call.
+- Statically typed: Types are known at "compile time"
+- Can infer types (although, to be safe, just annotate eveything)
+- Lazy evaluation
+
+* Calling Functions
+
+You call most Haskell functions by /prefixing/ its arguments.
+
+#+BEGIN_SRC haskell
+  max 1 2
+  min 3 5
+  div 1 2
+  mod 3 4
+#+END_SRC
+
+Haskell functions that comprises of symbols are by default /infix/:
+
+#+BEGIN_SRC haskell
+  1 + 2
+  5 - 1
+  7 * 4
+#+END_SRC
+
+You can make normal /binary/ functions infix by using backticks:
+
+#+BEGIN_SRC haskell
+  1 `max` 2 == max 1 2
+  3 `min` 5 == min 3 5
+#+END_SRC
+
+And you can make /binary/ infix functions prefix by using brackets:
+
+#+BEGIN_SRC haskell
+  (+) 1 2 == 1 + 2
+  (+) 3 5 == 3 + 5
+#+END_SRC
+
+** Question: Can you turn a non-binary (prefix) function into infix?
+
+* If statements
+
+If statements in Haskell **must** follow the =if-then-else=
+structure. You cannot omit =else=.
+
+#+BEGIN_SRC haskell
+  if x > 10 then 5 else 1
+
+  if x > 10
+  then 5
+  else 1
+#+END_SRC
+
+* List
+
+- Lists are /homogeneous/. This means all types in the list must be the same.
+- Lists can vary in length.
+
+Some important basic functions:
+- =head xs= - first element, O(1)
+- =last xs= - last element, O(n)
+- =tail xs= - all elements except head
+- =init xs= - all elements except last
+- =null xs= - check if list is null
+- =length xs= - length of list
+- =elem x xs= - check if =x= is in =xs=
+
+#+BEGIN_SRC haskell
+  take 2 [1,2,3] == [1,2]
+  drop 2 [1,2,3] == [3]
+#+END_SRC
+
+* List - Sums, Products, Maximum and Minimum
+
+#+BEGIN_SRC haskell
+  sum [1,2,3] == 6
+  product [1,2,3] == 6
+  maximum [1,2,3] == 3
+  minimum [1,2,3] == 1
+#+END_SRC
+
+* List - Zips
+
+Fairly useful concept, especially later on.
+
+#+BEGIN_SRC haskell
+  zip [1,2,3] ['a','b','c'] == [(1,'a'),(2,'b'),(3,'c')]
+  zip [1] ['a','b','c'] == [(1,'a')]
+#+END_SRC
+
+* List - Comparison
+
+#+BEGIN_SRC haskell
+  [1,2,3] < [2,1,0]
+  [100] > [2,1,0]
+  [] < [-999]
+#+END_SRC
+
+* Ranges
+
+The syntax for ranges is =[start,start + step,..,end]=. All ranges
+have =..=. You can omit =start + step=, and =end= as long as the range
+is unambiguous.
+
+=end= is inclusive, unlike Python.
+
+So:
+#+BEGIN_SRC haskell
+  [1..5] == [1,2,3,4,5]
+  [2,4,..] == [2,4,6,8,..] -- prints forever [2,2 + 2,..]
+  [10,9..1] == [10,9,8,7,6,5,4,3,2,1]
+#+END_SRC
+
+** Question: How do I define a range through enums?
+
+#+BEGIN_SRC haskell
+  data Dates = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday \
+    | Sunday deriving (Enum, Show)
+#+END_SRC
+
+- Important: Spaces matter (because reasons)
+
+* List Comprehension
+
+Format: =[<output> | <range...>, <predicates...>, (also lets...)]=
+
+#+BEGIN_SRC haskell
+  [(x,y,z) | z <- [1..10], y <- [1..z], x <- [1..y], x^2 + y^2 == z^2]
+  [sqq | x <- [1..10], let sq = x * x]
+#+END_SRC
+
+* Tuple
+
+- Heterogeneous. Types in the tuple can be different
+- Tuples are defined by their length.
+
+#+BEGIN_SRC haskell
+  some_fn :: [(Int, Char, Int)] -> [Char]
+  some_fn [] = []
+  some_fn ((_, c, _):xs) = c:some_fn xs
+#+END_SRC
+
+** Question: Is =(1,[])= equal to =([],1)=?
+
+* Lets
+
+This might be confusing, but =let= in GHCi is different from =let= in
+pure Haskell.
+
+(More accurately, =let= in the context of Monads is different from
+=let= in pure Haskell)
+
+In this section, we'll only discuss about =let= in pure Haskell.
+
+The syntax is =let ... in ...=. For example:
+
+#+BEGIN_SRC haskell
+  cylinder :: Double -> Double -> Double
+  cyliner r h =
+    let sideArea = 2 * pi * r * h
+        topArea = pi * r ^ 2 -- multiline before in is supported
+    in sideArea + 2 * topArea -- within the 'in' block, sideArea and topArea exists
+#+END_SRC
+
+You can also write =let= s in one line:
+#+BEGIN_SRC haskell
+  4 * (let a = 9 in a + 1) + 2
+#+END_SRC
+
+Also, you can use =let= in list comprehension, as you've seen in the
+list comprehension session.
+#+BEGIN_SRC haskell
+  [sqq | x <- [1..10], let sq = x * x]
+#+END_SRC
+
+* Where
+
+Compared /alot/ to =let=, this is another way to bind an expression to
+a variable. Here is another way to write the =cylinder= function:
+
+#+BEGIN_SRC haskell
+  cylinder :: Double -> Double -> Double
+  cyliner r h = sideArea + 2 * topArea
+    where sideArea = 2 * pi * r * h
+          topArea = pi * r ^ 2 -- multiline before in is supported
+#+END_SRC
+
+Both =let= and =where= can be used together.
+
+* Functions
+
+Functions can be declared without the function signature. Haskell will infer:
+
+#+BEGIN_SRC haskell
+  addOne x = x + 1 -- or, addOne = (+1)
+#+END_SRC
+
+But it is good practice to declare the function signature anyway:
+
+#+BEGIN_SRC haskell
+  addOne :: Int -> Int
+  addOne x = x + 1
+#+END_SRC
+
+You can interpret it as such: =function_name :: arg_1 -> arg_2 ->
+... -> ret_val=. (This is for understanding purposes only).
+
+The above =addOne= function only works for =Int=. What happens if we
+run it on floats?
+
+* Data Types
+
+- =Integer= - arbitrary length integers, slow
+- =Int= - fixed 64 bit integers
+- =Bool= - True or False
+- =Float= - floating point numbers (32 bit)
+- =Double= - floating point numbers (64 bit)
+- =Char= - characters
+- =String= - =[Char]=
+- Tuples are /composite/ data types.
+
+* Type Variables
+
+Instead of restricting =addOne= to =Int=, why not make it work on any type?
+
+#+BEGIN_SRC haskell
+  addOne :: a -> a
+  addOne x = x + 1
+#+END_SRC
+
+In the above example, =a= is known as a type variable.
+
+* Type Class
+
+Actually, the above signature implies we can do something like
+="hello" + "world"=. Think about the types being used here; should we
+be allowed to do this?
+
+[[https://upload.wikimedia.org/wikipedia/commons/0/04/Base-classes.svg][Typeclasses and what data types implement them]]
+
+Type classes is an interface that defines the behaviour of a type.
+- Think "interface" in OOP languages
+- Or "traits" in Rust
+
+Well-known ones:
+- Eq (for ~==~ and ~/=~)
+- Ord (for ~>~, ~>=~, ~<=~, ~<~)
+- Show (for printing in GHCi)
+- Read (for reading from GHCi)
+- Enum (=succ= or =pred=. Need this for list ranges as well)
+- Bounded (any type that has an upper bound and lower bound, =minBound= and =maxBound=)
+- Num (any type that can do arithmetic =+=, =-=, =/=, =*=, =^=)
+- Floating (=Float= and =Double=)
+- Integral (=Int= and =Integer=)
+
+Types and type classes have a many-to-many relationship (i.e. 1 type
+can have many typeclasses, and 1 typeclass can have many types)
+
+Now you can re-write =addOne= as:
+#+BEGIN_SRC haskell
+  addOne :: (Num a) => a -> a
+  addOne x = x + 1
+#+END_SRC
+
+=(Num a)= with the ~=>~ is known as a type constraint.
+
+* Pattern Matching
+
+Arguably the most powerful thing in Haskell. If you have a variable
+that conforms to some kind of structure, you can use pattern matching
+to match properties within the said variable.
+
+#+BEGIN_SRC haskell
+  get_nested_c :: (Int, (String, Char, String), Int) -> Char
+  get_nested_c (_, (_, c, _), _) = c
+#+END_SRC
+
+You've most commonly seen this when working with lists. For example,
+here is our own implementation of head:
+
+#+BEGIN_SRC haskell
+  head' :: [a] -> a
+  head' [] = error "bruh"
+  head' (x:_) = x
+#+END_SRC
+
+Also, it works for =let=, and =where=.
+
+You will learn later on (if I have the time) that Pattern Matching is
+actually a result of Value Constructors.
+
+** Question: How do I pattern match 2 elements in a list at once?
+
+* Pattern Matching - As patterns
+
+If you need the entire expression before pattern matching for any
+reason, here is how to do it:
+
+#+BEGIN_SRC haskell
+  firstLetter all@(x:xs) = "The first letter of " ++ all ++ " is " ++ x
+#+END_SRC
+
+* Pattern Matching - Case
+
+Actually, pattern matching is syntactic sugar for case expressions.
+
+#+BEGIN_SRC haskell
+  head' :: [a] -> a
+  head' [] = error "No head for empty list!"
+  head' (x:_) = x
+
+  head'' :: [a] -> a
+  head'' xs = case xs of [] -> error "No head for empty list!"
+                         (x:_) -> x
+#+END_SRC
+
+* Guards
+
+Here is another way to implement =head'=:
+
+#+BEGIN_SRC haskell
+  head' :: [a] -> a
+  head' xs
+    | length xs == 0 = error "bruh"
+    | otherwise = let x:_ = xs in x
+#+END_SRC
+
+The =|<predicate> = <expr>= are called /arms/. The =expr= matching any
+predicate will run.
+
+* Type Class - How to implement
+
+Ok great, so standard data types implement some of the above data
+classes. How do I make my own type implement them?
+
+Take for example the =Eq= type class. You have 2 (actually 3) choices:
+
+1. Use =deriving= in the declaration of the type
+2. Use =instance= to manually implement the type class
+3. Somehow, either via =deriving= or =instance=, inherit a super type class
+   (for example, =Ord= implements =Eq=)
+
+Deriving looks like this:
+
+#+BEGIN_SRC haskell
+  data days = Mon | Tues | Wed | Thurs | Fri | Sat | Sun deriving (Eq)
+#+END_SRC
+
+This only works if all of the types and type variables also implement =Eq=.
+For example, the following will not work:
+#+BEGIN_SRC haskell
+  -- notice that I don't derive Eq here
+  data Days = Mon | Tues | Wed | Thurs | Fri | Sat | Sun
+
+  -- this will throw an error (don't worry about newtype for now)
+  newtype TypeOfThree = TypeOfThree (Days, Days, Days) deriving (Eq)
+#+END_SRC
+
+Implementing the class looks like this:
+
+#+BEGIN_SRC haskell
+  data Days = Mon | Tues | Wed | Thurs | Fri | Sat | Sun
+  instance Eq Days where
+    Mon == Mon = True
+    Tues == Tues = True
+    Wed == Wed = True
+    Thurs == Thurs = True
+    Fri == Fri = True
+    Sat == Sat = True
+    Sun == Sun = True
+    _ == _ = False
+#+END_SRC
+
+** Question: How do I make my own type class?
+
+* Functions - Actually...
+
+Actually, all functions in Haskell only take in **one parameter**.
+
+Suppose I have a function with the following signature:
+
+#+BEGIN_SRC haskell
+  Int -> Int -> Int -> Int
+#+END_SRC
+
+This is actually:
+
+#+BEGIN_SRC haskell
+  Int -> (Int -> (Int -> Int))
+#+END_SRC
+
+The function takes an =Int=, and returns a function that takes an
+=Int= and returns a function that takes in an =Int=
+
+Why is this important? Because you can partially apply functions, in a
+concept known as curried functions:
+
+#+BEGIN_SRC haskell
+  div3 x = x / 3
+#+END_SRC
+
+If you check the type, this is now: =(Num a) => a -> a=. It now only
+takes in one argument, even though `div` normally takes in two!
+
+* Functions - Actually... Part 2
+
+Actually, you can shorten that to:
+
+#+BEGIN_SRC haskell
+  div3 = (/3)
+#+END_SRC
+
+This uses two concepts. First, =(/3)= is known as sectioning; it only
+works for infix operators. You can partially apply any side of an
+infix operator, and leave the other side as a parameter into a partial
+function. Now, =(/3)= has a signature of =a -> a=
+
+Second, =div3 = (/3)= doesn't seem like it takes in
+variables. However, it actually does, since =(/3)= has the signature
+=a -> a=. This means that =div3= also has a signature of =(/3)=.
+
+This allows us to write fairly elegant code, with =$= and =.=
+
+* Dollars ($)
+
+Without this operator, you may find yourself writing:
+
+#+BEGIN_SRC haskell
+  (func1 z (func2 y (func3 x)))
+#+END_SRC
+
+The more functions you have, the more brackets you'll need to write!
+This is really ugly, so the =$= was invented:
+
+#+BEGIN_SRC haskell
+  func1 z $ func2 y $ func3 x
+#+END_SRC
+
+=$= is right-associative, so it runs from right to left.
+
+* Dot (.)
+
+This is function composition, and is different from =$=.
+
+Function composition works on the level of the functions. Let's see an example:
+
+#+BEGIN_SRC haskell
+  plusOne = (+1)
+  (plusOne . plusOne . plusOne) x
+#+END_SRC
+
+* Lambdas
+
+They look like this:
+
+#+BEGIN_SRC haskell
+  \x -> x + 1
+#+END_SRC
+
+Every time you write a lambda, always ask yourself if it's
+needed. Chances are, you can write it with just functions
+
+* Map
+
+To the people who know Functors, hi. We'll talk about that next week.
+
+#+BEGIN_SRC haskell
+  -- :t map == map :: (a -> b) -> [a] -> [b]
+  map (+1) [1,2,3] == [2,3,4]
+#+END_SRC
+
+* Filter
+
+#+BEGIN_SRC haskell
+  -- :t filter == filter :: (a -> Bool) -> [a] -> [b]
+  filter (even) [1,2,3] == [2]
+  filter ((== 0) . `mod` 2) [1,2,3] == [2]
+#+END_SRC
+
+* Foldl / Foldr / Foldl1 / Foldr1
+
+#+BEGIN_SRC haskell
+  -- :t foldl == Foldable t => (b -> a -> b) -> b -> t a -> b
+  -- equivalently for our case: (b -> a -> b) -> b -> [a] -> b
+  foldl (/) 1 [1,2,3]
+
+  -- :t foldr == Foldable t => (a -> b -> b) -> b -> t a -> b
+  -- equivalently for our case: (a -> b -> b) -> b -> [a] -> b
+  foldr (/) 1 [1,2,3]
+#+END_SRC
+
+Will the results be equivalent?
+
+** Question: Guess what does Foldl1 and Foldr1 do?
+
+** Question: Suppose I have an infinite list; should I use foldl or foldr?
+
+* Importing Modules
+
+#+BEGIN_SRC haskell
+  import Data.List -- imports all the names from Data.List
+  import Data.List (nub, sort) -- only nub and sort can be used
+  import Data.List hiding (nub) -- all names except nub can be used
+  import qualified Data.Map -- must prefix all names with Data.Map (i.e. Data.Map.filter; just filter will call Prelude.filter)
+  import qualified Data.Map as M -- an alias.
+#+END_SRC
+
+With GHCi, you can use the following to import modules:
+
+#+BEGIN_SRC
+  ghci> :m + Data.List Data.Map Data.Set
+#+END_SRC
+
+* Exporting Modules
+
+#+BEGIN_SRC haskell
+  module Geometry
+  ( sphereVolume
+  , sphereArea
+  , cubeVolume
+  , cubeArea
+  , cuboidArea
+  , cuboidVolume
+  , Point(..) -- exports all value constructors of Point
+  , Shape(Circle,Rectangle) -- exports just a few value constructors of Shape
+  ) where
+
+  -- the rest of the stuff here are just normal function definitions
+#+END_SRC
+
+If you want to split them to files, the following will work:
+
+#+BEGIN_SRC haskell
+  -- Geometry/Sphere.hs
+
+  module Geometry.Sphere
+  ( volume
+  , area
+  ) where
+
+  -- etc
+
+  -- Geometry/Cuboid.hs
+
+  module Geometry.Cuboid
+
+  -- etc
+
+  -- Geometry/Cube.hs
+
+  module Geometry.Cube
+  ( volume
+  , area
+  ) where
+
+  import qualified Geometry.Cuboid as Cuboid --observe, even in the same folder we have to use Geometry.Cuboid
+
+  -- etc
+#+END_SRC
+
+* Data, Type and NewType
+
+Difference:
+- =type= makes type signatures look cleaner and more descriptive
+- =newtype= is the fastest; it's to wrap an existing type and make it
+  appear as a new type. Has a few constraints
+- =data= is used to make something new.
+
+#+BEGIN_SRC haskell
+  data Bool = False | True
+  data Shape = Circle Float Float Float | Rectangle Float Float Float Float deriving (Show)
+  data (Ord k) => Map k v -- etc. It is a convention not to do this. Add the constraints to functions instead.
+
+  -- Record Syntax
+  data Person = Person { firstName :: String
+                       , lastName :: String }
+
+  newtype CharList = CharList { getCharList :: [Char] } deriving (Eq, Show)
+
+
+  -- Laziness
+  data CoolBool = CoolBool { getCoolBool :: Bool }
+  newtype CoolBool = CoolBool { getCoolBool :: Bool }
+
+  helloMe :: CoolBool -> String -- errors on data, but not on newtype
+  helloMe (CoolBool _) = "hello"
+
+#+END_SRC
+
+Thing on the left is the /type constructor/. Thing on the right are
+/value constructors/. Both constructors can be partially applied
+(important in much higher level Haskell.)
