@@ -1,0 +1,204 @@
+* Tutor Session Week 9
+
+* Before we start
+- Attendance Taking
+- Any questions?
+
+* From last session...
+
+Here is one way to add three numbers together:
+
+#+BEGIN_SRC haskell
+  magicalAdd = (. (+)) . (.) . (+)
+#+END_SRC
+
+What in the world? Let's break down the types.
+
+As a reminder:
+- =(.)= has a type of =(b -> c) -> (a -> b) -> a -> c=
+- =(+)= has a type of =a -> a -> a=
+
+In fact, the definition for =(.)= is as simple as:
+
+#+BEGIN_SRC haskell
+  (.) :: (b -> c) -> (a -> b) -> a -> c
+  (.) f g x = (g (f x))
+#+END_SRC
+
+For the sake of simplicity, we'll call =(.)= as =dot= and =(+)= as
+=add= (for prefix function purposes). Let's transform the "top"-level
+dots (those that are not surrounded in paranthesis) using lambdas:
+
+- =(. (+)) . (.) . (+)= is =(\f -> dot f (\u v -> add u v)) . (\g h -> dot g h) . (\x y -> add x y)=
+- =(\h -> dot (\f -> dot f (\u v -> add u v)) h) . (\x y -> add x y)=
+- =(dot (\f -> dot f (\u v -> add u v)) (\x y -> add x y))=
+- =(\f -> dot f (\u v -> add u v)) . (\x y -> add x y)=
+- =(dot (\x y -> add x y) (\u v -> add u v))=
+- =(\x y -> add x y) . (\u v -> add u v)=
+- =(\u v y -> add (add u v) y)=
+
+And so, the resulting type is =a -> a -> a=! (To be exact, =(Num a) -> a -> a -> a=).
+
+* Where are dots useful?
+
+Suppose you want to map functions that do _not_ match a predicate.
+
+#+BEGIN_SRC haskell
+  map (\x -> not ((10 ==) x)) [1..10]
+#+END_SRC
+
+This can be simplified with the function composition operator:
+
+#+BEGIN_SRC haskell
+  map (not . (10 ==)) [1..10]
+#+END_SRC
+
+** Question: Why can't you do this with =$=?
+
+* Lambdas
+
+They look like this:
+
+#+BEGIN_SRC haskell
+  \x -> x + 1
+#+END_SRC
+
+Every time you write a lambda, always ask yourself if it's
+needed. Chances are, you can write it with just functions
+
+* Map
+
+To the people who know Functors, hi. We'll talk about that next week.
+
+#+BEGIN_SRC haskell
+  -- :t map == map :: (a -> b) -> [a] -> [b]
+  map (+1) [1,2,3] == [2,3,4]
+#+END_SRC
+
+* Filter
+
+#+BEGIN_SRC haskell
+  -- :t filter == filter :: (a -> Bool) -> [a] -> [b]
+  filter (even) [1,2,3] == [2]
+  filter ((== 0) . `mod` 2) [1,2,3] == [2]
+#+END_SRC
+
+* Foldl / Foldr / Foldl1 / Foldr1
+
+#+BEGIN_SRC haskell
+  -- :t foldl == Foldable t => (b -> a -> b) -> b -> t a -> b
+  -- equivalently for our case: (b -> a -> b) -> b -> [a] -> b
+  foldl (/) 1 [1,2,3]
+
+  -- :t foldr == Foldable t => (a -> b -> b) -> b -> t a -> b
+  -- equivalently for our case: (a -> b -> b) -> b -> [a] -> b
+  foldr (/) 1 [1,2,3]
+#+END_SRC
+
+Will the results be equivalent?
+
+** Question: Guess what does Foldl1 and Foldr1 do?
+
+** Question: Suppose I have an infinite list; should I use =foldl= or =foldr=?
+
+Answer: Associativeness.
+- =foldl= is left associative, produces this list: =f( ... (f (f (f accum x1) x2) x3) ... xn)=
+- =foldr= is right associative, produces this list: =f x1 (f x2 (f x4 ... (f xn accum) ...)=
+
+** Question: How are arguments passed into the function used for =foldl= and =foldr=?
+
+* Importing Modules
+
+#+BEGIN_SRC haskell
+  import Data.List -- imports all the names from Data.List
+  import Data.List (nub, sort) -- only nub and sort can be used
+  import Data.List hiding (nub) -- all names except nub can be used
+  import qualified Data.Map -- must prefix all names with Data.Map (i.e. Data.Map.filter; just filter will call Prelude.filter)
+  import qualified Data.Map as M -- an alias.
+#+END_SRC
+
+With GHCi, you can use the following to import modules:
+
+#+BEGIN_SRC
+  ghci> :m + Data.List Data.Map Data.Set
+#+END_SRC
+
+* Exporting Modules
+
+#+BEGIN_SRC haskell
+  module Geometry
+  ( sphereVolume
+  , sphereArea
+  , cubeVolume
+  , cubeArea
+  , cuboidArea
+  , cuboidVolume
+  , Point(..) -- exports all value constructors of Point
+  , Shape(Circle,Rectangle) -- exports just a few value constructors of Shape
+  ) where
+
+  -- the rest of the stuff here are just normal function definitions
+#+END_SRC
+
+If you want to split them to files, the following will work:
+
+#+BEGIN_SRC haskell
+  -- Geometry/Sphere.hs
+
+  module Geometry.Sphere
+  ( volume
+  , area
+  ) where
+
+  -- etc
+
+  -- Geometry/Cuboid.hs
+
+  module Geometry.Cuboid
+
+  -- etc
+
+  -- Geometry/Cube.hs
+
+  module Geometry.Cube
+  ( volume
+  , area
+  ) where
+
+  import qualified Geometry.Cuboid as Cuboid --observe, even in the same folder we have to use Geometry.Cuboid
+
+  -- etc
+#+END_SRC
+
+* Data, Type and NewType
+
+Difference:
+- =type= makes type signatures look cleaner and more descriptive
+- =newtype= is the fastest; it's to wrap an existing type and make it
+  appear as a new type. Has a few constraints
+- =data= is used to make something new.
+
+#+BEGIN_SRC haskell
+  data Bool = False | True
+  data Shape = Circle Float Float Float | Rectangle Float Float Float Float deriving (Show)
+  data (Ord k) => Map k v -- etc. It is a convention not to do this. Add the constraints to functions instead.
+
+  -- Record Syntax
+  data Person = Person { firstName :: String
+                       , lastName :: String }
+
+  newtype CharList = CharList { getCharList :: [Char] } deriving (Eq, Show)
+
+
+  -- Laziness
+  data CoolBool = CoolBool { getCoolBool :: Bool }
+  newtype CoolBool = CoolBool { getCoolBool :: Bool }
+
+  helloMe :: CoolBool -> String -- errors on data, but not on newtype
+  helloMe (CoolBool _) = "hello"
+
+#+END_SRC
+
+Thing on the left is the /type constructor/. Thing on the right are
+/value constructors/. Both constructors can be partially applied
+(important in much higher level Haskell.)
