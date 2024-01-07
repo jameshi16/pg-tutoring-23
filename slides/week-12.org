@@ -1,0 +1,285 @@
+* Tutor Session Week 12
+
+* Before we start
+- Attendance Taking
+- Catch-up
+- Agenda
+
+* Java
+
+Java is an **Object-Oriented Programming** programming language. It
+has the following features:
+
+- Automatic Memory Management via _Garbage Collection_
+- Compiles down to JVM Bytecode
+- Used by a lot of devices (like 56 billion devices or something)
+- /Strongly typed/ - it is strict
+
+
+I don't like Java, Rust is infinitely better.
+(If you don't have a choice, use =C#=. Never touched it in my life,
+but the circle I'm in really recommends it)
+
+* Ok but what is an object
+
+Too early buckeroo, try another section
+
+* Ok, what is a class?
+
+/Strictly/ speaking, it is simply a structure with _fields_ and
+_methods_.
+
+There are _many_ people who will disagree with me, but this is my
+definition and you're attending my class ¯\_(ツ)_/¯.
+
+Here is an example of a minimal class:
+
+#+BEGIN_SRC java
+  class MinimalClass {
+      private String some_a;
+      private Integer some_b;
+
+      public MinimalClass() {
+      }
+
+      public MinimalClass(String some_a, Integer some_b) {
+          this.some_a = some_a;
+          this.some_b = some_b;
+      }
+
+      public void doSomething() {
+          System.out.println(some_a);
+          System.out.println(some_b);
+      }
+  }
+#+END_SRC
+
+- Fields: =some_a= and =some_b=
+- Methods: =doSomething()=
+  - Constructor: =MinimalClass= and =MinimalClass(String, Integer)=
+
+* Ok, but I want the definition that can pass my exams
+
+A structure with _fields_ and _methods_, but also with the following
+properties:
+
+- Encapsulation
+- Inheritance
+- Polymorphism
+
+What are those? Let's hope we find out by the end of this week
+(clueless).
+
+* Basics - Types 1
+
+Does the following code snippet work?
+
+#+BEGIN_SRC java
+  int a = 10.1;
+#+END_SRC
+
+* Basic - Types 2
+
+Nope:
+
+[[./images/java_01.png]]
+
+Java is very strongly typed.
+
+* Basic - Types 3
+
+There are two categories of types:
+
+1. Primitive Types: =int=, =long=, =float=, =double=, =char=.
+2. Class Types: =String=, =ArrayList=, =Graphics=
+
+* Basic - Primitive Types
+
+You can compare primitive types, and you get what you expect:
+
+#+BEGIN_SRC java
+  int a = 100;
+  int b = 100;
+
+  System.out.println(a == b);
+#+END_SRC
+
+When you assign some primitive value to a variable, it is **copied**.
+
+Some other types:
+1. =boolean=: true / false
+2. =int=: 32 bit 2's complement
+3. =long=: 64 bit 2's complement
+4. =char=: 16 bit unsigned Unicode character code (yes, =char= is
+   Unicode)
+5. =float=: 32 bit floating point (e.g. =1.234F=)
+6. =double=: 64-bit floating point (default)
+
+* Basic - Class Types
+
+Values are stored in variables are /references/ to objects on the
+heap.
+
+Revelation 1: These values are **on the heap**.
+Revelation 2: The variables technically store references.
+
+Hence:
+- Comparing two variables that are class types will **compare
+  references**
+- To compare between two class type variables, use =.equals()= or
+  =.compareTo()=
+
+* Basic - Strings
+
+Quiz: Does the following work?
+
+#+BEGIN_SRC java
+  String a = "hello";
+  String b = "hello";
+
+  // What does this print?
+  System.out.println(a == b);
+#+END_SRC
+
+* Basic - Strings 2
+
+Quiz: What about this?
+
+#+BEGIN_SRC java
+  String a = new String("hello");
+  String b = new String("hello");
+
+  // What does this print?
+  System.out.println(a == b);
+#+END_SRC
+
+* Basic - String Interning
+
+Most strings in Java are interned by default; they are a pool of
+string that are maintained by the JVM, and all share the same
+reference.
+
+Many new programmers fall into the trap of thinking that just because
+two strings can be equalled using =\=\==, the equality operator works
+the same as =.equals()=.
+
+* Basic - Variables
+
+Variables in Java have the following form:
+
+#+BEGIN_SRC
+  <data type> <name> = <value>;
+#+END_SRC
+
+* Basic - Scopes
+
+There are three scopes:
+- Local Scope (within ={}=)
+- Method / Parameter Scope
+- Class / Instance scope
+
+Quiz: Will this work?
+
+#+BEGIN_SRC java
+  {
+    String a = "local scope";
+  }
+  System.out.println(a);
+#+END_SRC
+
+Scopes apply to anything that is named, **not just variables**.
+
+* Basic - Classes
+
+Classes describe the behavior of an instance. It's often described as
+the template or factory for creating objects.
+
+Classes **cannot** have modifiers (i.e. public, private, protected).
+
+Here's a simple class (with no fields):
+
+#+BEGIN_SRC java
+  public class Welcome {
+    public void sayHello() {
+      System.out.println("Hello World");
+    }
+  }
+#+END_SRC
+
+To use it from somewhere, you must first **instantiate** it:
+
+#+BEGIN_SRC java
+  Welcome some_name = new Welcome();
+  some_name.sayHello();
+#+END_SRC
+
+* Basic - Classes + Modifiers
+
+Stuff within classes can have modifiers. There're actually 4:
+
+- (Nothing) - Package Public (i.e. only same package can access)
+- =public= - Fully public (i.e. accessible everywhere that has an instance)
+- =private= - Fully private (i.e. only own class can access)
+- =protected= - Only inherited subclasses and itself can access
+
+Classes themselves do not have visibility modifiers.
+
+Question: Would this work?
+
+#+BEGIN_SRC java
+  class OuterClass {
+      private class InnerClass {
+
+      }
+  }
+#+END_SRC
+
+* Basic - Classes + Overloading
+
+You can overload methods in classes.
+
+#+BEGIN_SRC java
+  class SomeClass {
+    public void some_method() {
+    }
+
+    public void some_method(String some_other_thing) {
+    }
+  }
+#+END_SRC
+
+* Basic - Inheritance
+
+You must have seen this simple inheritance example:
+
+#+BEGIN_SRC java
+  class Animal {
+    String some_shared_variable = "hi";
+
+    void print_some_shared_variable() {
+      System.out.println(some_shared_variable);
+    }
+
+    void speak() {
+      System.out.println("i have no mouth but i must scream");
+    }
+  }
+#+END_SRC
+
+#+BEGIN_SRC java
+  class Cat extends Animal {
+      void speak() {
+          System.out.println("actually nevermind, i meow");
+          this.print_some_shared_variable();
+      }
+  }
+#+END_SRC
+
+#+BEGIN_SRC java
+  class Dog extends Animal {
+    void speak() {
+        System.out.println("woofing is better");
+        this.print_some_shared_variable();
+    }
+  }
+#+END_SRC
