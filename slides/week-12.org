@@ -194,8 +194,6 @@ Scopes apply to anything that is named, **not just variables**.
 Classes describe the behavior of an instance. It's often described as
 the template or factory for creating objects.
 
-Classes **cannot** have modifiers (i.e. public, private, protected).
-
 Here's a simple class (with no fields):
 
 #+BEGIN_SRC java
@@ -283,3 +281,464 @@ You must have seen this simple inheritance example:
     }
   }
 #+END_SRC
+
+* Basic - Class Modifiers
+
+Classes can have (some) modifiers too, although only one of them
+actually controls visibility.
+
+e.g:
+
+#+BEGIN_SRC java
+  // This class can be accessed by all packages
+  public class Dog extends Animal {}
+
+  // This class can be accessed by the same package
+  class Dog extends Animal {}
+#+END_SRC
+
+Quiz: What do these do?
+
+#+BEGIN_SRC java
+  protected class Dog extends Animal {}
+  private class Dog extends Animal {}
+#+END_SRC
+
+* Basic - Interfaces
+
+Classes are _blueprints_ or _templates_ of objects.
+
+On the other hand, interfaces are _contracts_. They're like a promise
+that "my object will definitely have these behaviour".  For example,
+suppose the following interface:
+
+#+BEGIN_SRC java
+  interface Rocket {
+    void launch();
+  }
+#+END_SRC
+
+Every rocket is slightly different, because they have different
+missions. For example, the Apollo rocket perhaps does something like this:
+
+#+BEGIN_SRC java
+  public class Apollo implements Rocket {
+    private String callsign = "some_interesting_callsign";
+    private String[] passengers = {"Gus Grissom", "White", "Donn F. Eisele"};
+
+    Boolean is_rocket_ready() {
+      return True;
+    }
+
+    // NOTE: must be implemented
+    void launch() {
+      // do something interesting
+    }
+  }
+#+END_SRC
+
+The class itself can have their own methods, but no matter what, they
+**must** have the =launch()= function to be a rocket.
+
+Quiz: Does the following work?
+
+#+BEGIN_SRC java
+  interface Rocket {
+    int amount_of_fuel_needed;
+    void launch();
+  }
+#+END_SRC
+
+#+BEGIN_SRC java
+  interface Rocket {
+    int amount_of_fuel_needed = 100;
+    void launch();
+  }
+
+  class Apollo implements Rocket {
+    void launch() {
+      this.amount_of_fuel_needed = 120;
+    }
+  }
+#+END_SRC
+
+* Basic - Multiple Classes vs Multiple Interfaces
+
+Is the Apollo spacecraft also a vehicle?
+
+#+BEGIN_SRC java
+  interface Vehicle {
+    void start();
+    void stop();
+  }
+#+END_SRC
+
+Yes! So how do we tell Java that Apollo is both a =Rocket= and a
+=Vehicle=?
+
+#+BEGIN_SRC java
+  class Apollo implements Vehicle, Rocket {
+    void launch() {}
+    void start() {}
+    void stop() {}
+  }
+#+END_SRC
+
+Can I do the same for classes? i.e.:
+
+#+BEGIN_SRC java
+  abstract class Rocket {
+    // side note: abstract functions automatically make the class an
+    // abstract class.
+    // abstract classes are like normal classes but only partially implemented
+    abstract void launch();
+  }
+
+  abstract class Vehicle {
+    abstract void start();
+    abstract void stop();
+  }
+
+  // Will this work?
+  class Apollo extends Rocket, Vehicle {
+    void launch() {}
+    void start() {}
+    void stop() {}
+  }
+#+END_SRC
+
+* Basic - Why not multiple inheritance?
+
+Many language designers don't do Multiple Inheritance to prevent a
+problem known as the "Diamond Inheritance" problem.
+
+Suppose you have the following setup:
+
+#+BEGIN_SRC java
+  class A {
+    void test() {
+      System.out.println("pain");
+    }
+  }
+
+  class B extends A {
+    void test() {
+      System.out.println("spain but without the s");
+    }
+  }
+
+  class C extends A {
+    void test() {
+      System.out.println("pain but I actually didn't forget the s");
+    }
+  }
+
+  // what does D::test() do?
+  class D extends B, C {}
+#+END_SRC
+
+Remember that classes are like _blueprints_; it's like having two
+blueprints of two different types of houses, and then wondering how to
+resolve the differences.
+
+Implementing multiple interfaces works though, because of this:
+
+#+BEGIN_SRC java
+  interface B {
+    void test();
+  }
+
+  interface C {
+    void test();
+  }
+
+  class A implements B, C {
+    // both B::test() and C::test() will refer to this!
+    @Override
+    void test() {};
+  }
+#+END_SRC
+
+Quiz: Starting from Java 8, you can now define _default
+implementations_ for interfaces. What happens if you do this?
+
+#+BEGIN_SRC java
+  interface B {
+    default void test() {
+      System.out.println("spain but without the s");
+    }
+  }
+
+  interface C {
+    default void test() {
+      System.out.println("pain but I actually didn't forget the s");
+    }
+  }
+
+  // A doesn't have to implement anything, since defaults exist.
+  // But when we call A::test(), what happens???
+  class A implements B, C {}
+#+END_SRC
+
+* Basic - When to use class vs interface
+
+Use **classes** when it fulfils the Liskov Substitution Principle:
+Objects of a superclass should be able to replaced with objects of a
+subclass **without affecting the correctness of the program** - Some
+internet smart guy.
+
+- e.g: Superclass is a Wooden Chair, Subclass is a Red Wooden
+  Chair. Both are wooden chairs, and can be swapped in all contexts
+  without breaking anything.
+- e.g. Superclass is me, Subclass is anyone who has above room
+  temperature IQ. Both are humans, and can solve the same problems
+  without breaking anything.
+
+
+Use **interfaces** when you need a type to fulfil some
+behaviour. Most things are implemented as **interfaces**, for example:
+
+- e.g.: Interface: Rocket. Apollo is a rocket, but I don't really care
+  how it works; it just needs to launch.
+- e.g.: Interface: Vehicle. Apollo is also a vehicle, but I don't
+  really care that it flies to space, or is a rocket. It just needs to
+  start and stop.
+
+
+You'll often see interfaces in the form of =IHumanable= or =IShape=. I
+like to name my interfaces a certain adjective, like =Publishable=, or
+=Subscribable=.
+
+Sneaky argument: I argue interfaces > classes for all languages no
+matter what. (we love rust)
+
+* Basic - Class Modifiers 2
+
+Ok, so now we have =Apollo=. Between the original =Apollo= and the
+subsequent =Apollo= rockets, do they satisfy the Liskov Substitution
+Principle?
+
+* Basic - Class Modifiers 2.1
+
+Since all rockets are built for different purposes, we should enforce
+no programmer can just say "oh it's the original Apollo but it does
+xyz".
+
+Suppose I set up the following classes:
+
+#+BEGIN_SRC java
+  final class Apollo implements Rocket, Vehicle {}
+#+END_SRC
+
+Now, if someone else decides to make a new rocket, they can't just do:
+
+#+BEGIN_SRC java
+  class NotApollo extends Apollo {}
+#+END_SRC
+
+* Basic - Class Modifiers 2.2
+
+Hmm, actually, aren't all Rockets vehicles?
+
+So it doesn't make sense that for every rocket I create, I have to
+implement both Rocket and Vehicle.
+
+All rockets must be =Rocket=, and all =Rocket= is also a
+=Vehicle=. There are two ways to refactor, so we can represent this
+semantically:
+
+#+BEGIN_SRC java
+  abstract class Rocket implements Vehicle {
+    abstract void launch();
+  }
+
+  final class Apollo extends Rocket {
+    // now Apollo needs to implement launch(), start() and stop()!
+    // or, Rocket can also implement it.
+  }
+#+END_SRC
+
+Abstract classes are still classes, but _partially implemented_. They
+still participate in the Liskov Substitution Principle, except they
+don't count as a concrete type (since it's still a blueprint of a blueprint).
+
+You can also keep this within interface-land by doing this:
+
+#+BEGIN_SRC java
+  interface Rocket extends Vehicle { /*...*/ }
+#+END_SRC
+
+Quiz: Can you do this? Why / why not?
+
+#+BEGIN_SRC java
+  interface Rocket extends Vehicle, IEngine {}
+#+END_SRC
+
+* String Manipulation
+
+Remember that all strings in Java are immutable. Suppose I want to
+concatenate two strings:
+
+#+BEGIN_SRC java
+  String a = "some_string";
+  String b = "another_string";
+
+  System.out.println(a + b);
+#+END_SRC
+
+What is the time complexity of this operation? (Assume no
+optimization)
+
+If I have =k= strings of size =n=, what would the time complexity?
+
+Slightly better:
+#+BEGIN_SRC java
+  System.out.println(a.concat(b));
+#+END_SRC
+
+Even better:
+
+#+BEGIN_SRC java
+  StringBuilder a = new StringBuilder("some_string");
+  a.append("another_string");
+
+  System.out.println(a.to_string());
+#+END_SRC
+
+Why is this better than =a.concat(b)=?
+
+* Goal of StringBuilder
+
+=StringBuilder= stores the characters within the string like a mutable
+array. Unlike =String=, which is an immutable sequence of
+characters, you can modify the contents of =StringBuilder=.
+
+This often means you can achieve certain operations much faster in a
+=StringBuilder= than a =String=. However, it is still better to pass
+=String= to a method call compared to =StringBuilder=. Why?
+
+Always remember that a =StringBuilder= _builds_. It is not meant to be
+used as a final product.
+
+* Arrays
+
+Arrays in Java takes the following forms (similar to C):
+
+#+BEGIN_SRC java
+  int[] some_array = new int[12];
+  int n = some_array[2];
+  some_array[3] = 10;
+
+  int[] array = {1,2,3,4,5};
+  int[] array = new int[]{1,2,3,4,5};
+#+END_SRC
+
+Methods to work with arrays can be found in the =java.util.Arrays=
+package:
+- =binarySearch=
+- =fill=
+- =copyOf=
+- =sort=
+- =Array.newInstance(someClass, 10)= - very useful when array types
+  are not known at compile time.
+
+Quiz: What are the default values of the elements in the array?
+
+Quiz: Are arrays a primitive data type, or an class type?
+
+* WTF - Why are arrays not primitive?
+
+Legacy issues. But, you can also work it out yourself; even in C, you
+have to use a pointer to refer to an array. In Java, array are
+references.
+
+* Containers
+
+Normally, people don't use the primitive arrays directly. Instead,
+they use collections that are in the standard library:
+
+- =ArrayList=, =LinkedList=
+- =HashMap=, =TreeMap=
+- =TreeSet=, =HashSet=
+
+Here's an example:
+
+#+BEGIN_SRC java
+  ArrayList<String> a = new ArrayList<>();
+  String s1 = "hello";
+  a.add(s1);
+  a.add("world");
+  String s = a.get(1);
+  // note that there is no [] accessors; i.e. a[1] doesn't work
+#+END_SRC
+
+If you need an immutable list, use =List.of()=.
+
+Quiz: Which is better?
+
+#+BEGIN_SRC java
+  List<String> a = new ArrayList<>();
+  // or
+  ArrayList<String> a = new ArrayList<>();
+#+END_SRC
+
+* Boxing / Unboxing
+
+Quiz: Does the following work?
+
+#+BEGIN_SRC java
+  static void some_method(Integer notANormalInt) {
+    System.out.println(notANormalInt);
+  }
+
+  public static void main(String[] args) {
+    int a = 123;
+    some_method(123); // this is int, not Integer!
+  }
+#+END_SRC
+
+* Static
+
+When =static= is specified as a modifier for fields or methods, it
+means that the name is tied to the =class= (the blueprint) and not the
+=object=.
+
+E.g.:
+
+#+BEGIN_SRC java
+  class Something {
+    static int a = 123;
+    int b = 456;
+
+    Something() {
+      this.b = 789;
+    }
+
+    static void change_a() {
+      Something.a = 0;
+    }
+
+    void print_all() {
+      System.out.println(Something.a);
+      System.out.println(this.b);
+    }
+  }
+#+END_SRC
+
+Quiz: Does the following work?
+
+#+BEGIN_SRC java
+  static void change_a() {
+    Something.a = 0;
+    this.b = 789;
+  }
+#+END_SRC
+
+* Next time, I want to talk about:
+
+- Inheritance vs Composition
+- Design Patterns you will 101% use
+- Generics (hopefully)
+- Records
+- =for=-ranged loop
+- Anything else you want to talk about?
