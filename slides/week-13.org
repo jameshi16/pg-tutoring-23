@@ -1,0 +1,273 @@
+* Tutor Session Week 13
+
+* Before we start
+
+- Attendance Taking
+
+* Inheritance
+
+A form of polymorphism.
+
+To recap, this is inheritance:
+
+#+BEGIN_SRC java
+  class Parent {
+    void doSomething() {
+      /* something */
+    }
+  }
+
+  class Child extends Parent {
+    @Override
+    void doSomething() {
+      // child can either implement their own doSomething(),
+      // access protected methods / fields,
+      // or call the super functions
+      super.doSomething();
+    }
+  }
+#+END_SRC
+
+All classes in Java has a constructor. If you don't define one
+explicitly, then it is defined automatically for you. Here is what
+explicitly defining one looks like:
+
+#+BEGIN_SRC java
+  class Parent {
+    public Parent() {
+    }
+  }
+
+  class Child {
+    // child will implicitly call the Parent() constructor
+  }
+#+END_SRC
+
+All children class constructors _MUST_ call the parent constructor in
+some form. **If** such a call is not explicitly done, the implicit
+parent constructor is called.
+
+Quiz: What happens in this situation?
+#+BEGIN_SRC java
+  class A {}
+  class B extends A {
+    public B (int whatever) {
+    }
+  }
+#+END_SRC
+
+* Inheritance - 2
+
+Quiz: What about this?
+
+#+BEGIN_SRC java
+  class A {
+    public A(int notdefault) {
+
+    }
+  }
+
+  class B extends A {}
+#+END_SRC
+
+* Inheritance - 3
+
+Quiz: What will this print?
+
+#+BEGIN_SRC java
+  class A {
+    public A() {
+      System.out.println("A");
+    }
+  }
+
+  class B {
+    public B() {
+      System.out.println("B");
+    }
+  }
+#+END_SRC
+
+* Composition
+
+An alternative to inheritance. Instead of inheriting from a parent to
+get behaviour, the class takes in other objects to use their
+behaviour.
+
+#+BEGIN_SRC java
+  class Human {
+    private Human mother;
+    private Human father;
+    private Job job;
+    private List<Pet> pets;
+  }
+#+END_SRC
+
+To create such a human, you can perform what is known as Dependency
+Injection:
+
+#+BEGIN_SRC java
+  class Human {
+    private Human mother;
+    private Human father;
+    private Job job;
+    private List<Pet> pets;
+
+    // this is an example of DI
+    public Human(Human mother, Human father, Job job, List<Pet> pets) {
+      this.mother = mother;
+      // etc
+    }
+  }
+#+END_SRC
+
+Dependency Injection is a /concept/. What I just showed you is just
+/one/ way to do Dependency Injection; lots of frameworks have
+different ways to do this.
+
+Why is this superior to inheritance?
+- More flexible; if you use interfaces for each of the fields, we can
+  change any underlying implementation without breaking all of our
+  code (as long as it fits the Liskov Substitution Principle).
+- Easier to add new functionality. Need new functionality? Just add a
+  new field, a way to inject into that field, and a method to use that
+  field. Don't have to go up the inheritance chain, declare a method,
+  then see as it affects all other subclasses.
+- Inherently avoids diamond problem.
+- Code more easily reused.
+
+Note: In composition, interfaces can still extend from interfaces -
+after all, you can't exactly store fields in interfaces (practical
+reason). In principle, this does not break composition, because
+interfaces are /contracts/ - /contracts/ extending from /contracts/
+are simply adding more clauses to the contract.
+
+* Basic Design Patterns
+
+(Go to [[this website][https://refactoring.guru]])
+
+* Generics
+
+Generics in Java allow you to write a generic function that works for
+many types.
+
+It is a form of polymorphism, known as parametric polymorphism. Using
+generics gives you a way to remove duplicate code that commonly arises
+by method overloading. For example:
+
+#+BEGIN_SRC java
+  void print(String s) {
+    // for the sake of example
+    System.out.println("my very unique and special print function: " + s);
+  }
+
+  void print(Integer i) {
+    print(i.toString());
+  }
+
+  // one more for double, and float!
+#+END_SRC
+
+We can instead write the above code like so:
+
+#+BEGIN_SRC java
+  <T> void print(T s) {
+    System.out.println("my very unique and special print function: " + s.toString());
+  }
+#+END_SRC
+
+The above works because the default lower bound of =T= is =Object=,
+which has the method =toString()=. If you want to force =T= to
+implement something like a list, do this:
+
+#+BEGIN_SRC java
+  static <T extends List<X>, X> void print(T list) {
+    for (X i : list) {
+      System.out.println(i);
+    }
+  }
+#+END_SRC
+
+(Lower bound means that =T= MUST implement =List<X>= at some point in
+the hierarchy - =T= can be a subtype of =List<X>=)
+
+(Upper bound means that you support all supertypes of =T=, which means
+everything from =T= to =List<X>= all the way to =Object=).
+
+You can rewrite the above code block as:
+#+BEGIN_SRC java
+  static void print(List<? extends Object>) {
+    // the rest of code here
+  }
+#+END_SRC
+
+Quiz: Does this work?
+
+#+BEGIN_SRC java
+  static <T> void someFunction() {
+    T[] t = new T[100];
+  }
+#+END_SRC
+
+* Generics - Type Erasure
+
+Whenever generics are involved, the types are **erased** at compile
+time.
+
+This means that a function like this:
+
+#+BEGIN_SRC java
+  static void print(List<? extends Object>) {
+    // the rest of code here
+  }
+#+END_SRC
+
+(functionally) becomes this:
+
+#+BEGIN_SRC java
+  static void print(List<Object>) {
+    // the rest of code here
+  }
+#+END_SRC
+
+If you do =List<? extends String>= instead, then the erasure will make
+it functionally equivalent to =List<String>=.
+
+Why is this important? This means that at runtime, it is **very hard**
+to get the real type of an object programatically, since it is
+effectively erased.
+
+Quiz: Will this work? Why?
+
+#+BEGIN_SRC java
+  static <T> void someGenericFunction(T thingy) {
+    System.out.println(thingy instanceof String);
+  }
+
+  // somewhere else, maybe in main
+  someGenericFunction("some string");
+#+END_SRC
+
+Quiz: Will this work? Why?
+
+#+BEGIN_SRC java
+  static <X> void someGenericListFunction(List<X> thingy) {
+    System.out.println(thingy instanceof List<String>);
+  }
+
+  someGenericListFunction(List.of("1","2","3"));
+#+END_SRC
+
+* Generics - Reified Types
+
+The following are reified types:
+- Primitives
+- Non-generic classes (i.e. classes that don't have the =<X>=
+  anywhere)
+- Unbounded wildcard generic types =List<?>=
+- Raw types =List= (note, without the =<?>=. Treated as unsafe and
+  legacy)
+- Arrays of reifiable types
+
+Types that are not reified do not have enough type information at run
+time for you to use =instanceof= (or reflection, even).
