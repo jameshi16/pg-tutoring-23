@@ -34,11 +34,10 @@ explicitly defining one looks like:
 
 #+BEGIN_SRC java
   class Parent {
-    public Parent() {
-    }
+    // implicitly defines Parent() {}
   }
 
-  class Child {
+  class Child extends Parent {
     // child will implicitly call the Parent() constructor
   }
 #+END_SRC
@@ -49,11 +48,13 @@ parent constructor is called.
 
 Quiz: What happens in this situation?
 #+BEGIN_SRC java
-  class A {}
+  class A {/* A() */}
   class B extends A {
     public B (int whatever) {
     }
   }
+
+  B b = new B(123);
 #+END_SRC
 
 * Inheritance - 2
@@ -67,7 +68,8 @@ Quiz: What about this?
     }
   }
 
-  class B extends A {}
+  class B extends A {
+  }
 #+END_SRC
 
 * Inheritance - 3
@@ -76,16 +78,22 @@ Quiz: What will this print?
 
 #+BEGIN_SRC java
   class A {
+    protected String a;
+
     public A() {
+      this.a = "123";
       System.out.println("A");
     }
   }
 
-  class B {
+  class B extends A {
     public B() {
+      this.a = "456";
       System.out.println("B");
     }
   }
+
+  B b = new B();
 #+END_SRC
 
 * Composition

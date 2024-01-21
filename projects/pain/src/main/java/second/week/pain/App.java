@@ -1,6 +1,8 @@
 package second.week.pain;
 
 import java.util.List;
+import second.week.observer.Publisher;
+import second.week.observer.Subscriber;
 
 public class App {
     static <T> void print(T s) {
@@ -22,12 +24,20 @@ public class App {
     }
 
     public static void main(String[] args) {
-        print("hi");
-        print(123);
-        print(List.of("1", "2", "3"));
-        someGenericFunction("tomfoolery");
-        someGenericFunction(123);
-        Parent p = new Child();
-        System.out.println("Hello World!");
+        // Transport transport = Factory.createTransport("car");
+        // System.out.println(transport instanceof Car);
+
+        // Eatable<SomeFood> eatable = new Eatable<>(new SomeFood());
+        // fnOnEatable(eatable);
+
+        Publisher publisher = new Publisher();
+
+        Subscriber sub_1 = new Subscriber("first sub");
+        Subscriber sub_2 = new Subscriber("julie");
+
+        publisher.add_observer(sub_1);
+        publisher.add_observer(sub_2);
+
+        publisher.publish("a message");
     }
 }
