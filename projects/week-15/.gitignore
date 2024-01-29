@@ -1,0 +1,4 @@
+.pyenv
+mnist_784.arff
+__pycache__
+.ipynb_checkpoints

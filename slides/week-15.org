@@ -1,0 +1,9 @@
+* Tutor Session Week 15
+
+* Before we start
+
+- Attendance Taking
+
+* KNN
+
+(Entirely practical lesson, look at projects/week-15)
